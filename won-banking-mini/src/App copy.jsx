@@ -1,7 +1,4 @@
 // 필요한 부품들을 가져옴
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
 import './App.css'
 // 02_html기초.html 안에 만들었던 계좌카드의 css를 가져와서 꾸미기
 // 2. 함수
