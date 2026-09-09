@@ -4,11 +4,14 @@ import { useState } from 'react';
 import Clock from './components/Clock';
 import Header from './components/Header';
 // import Counter from './components/Counter';
+import { transactions as initialTransactions } from './data/mockData'
 import Panel from './components/Panel';
 import AccountCard from './components/AccountCard';
 import TransactionList from './components/TransactionList'
 import ExchangeRate from './components/ExchangeRate';
 import { formatWonMasked } from './utils/format';
+import { UserProvider } from './contexts/UserContext';
+import TransferForm from './components/TransferForm';
 // 02_html기초.html 안에 만들었던 계좌카드의 css를 가져와서 꾸미기
 
 // 실제로 사용될 화면 그림
@@ -41,38 +44,11 @@ function App() {
   },
 ]
 
-const transactions = [
-  {
-    id: 1,
-    txType: "입금",
-    amount: 500000,
-    category: "급여",
-    memo: "월급",
-    counterparty: "회사",
-    txDatetime: "2026-09-01T10:30:00",
-  },
-  {
-    id: 2,
-    txType: "출금",
-    amount: 35000,
-    category: "식비",
-    memo: "점심 식사",
-    counterparty: "맛있는 식당",
-    txDatetime: "2026-09-02T14:30:00",
-  },
-  {
-    id: 3,
-    txType: "출금",
-    amount: 12000,
-    category: "교통",
-    memo: "교통카드 충전",
-    counterparty: "교통카드",
-    txDatetime: "2026-09-03T17:00:00",
-  },
-];
-
   // 고객 전체 정보를 state로 관리
   const [accounts, setAccounts] = useState(initialaccounts);
+
+  // 거래내역을 처음에 한 번 전체 정보로 불러와 하위 컴포넌트 감싼다
+  const [transactions, setTransactions] = useState(initialTransactions);
 
   // flag 변수: 특정 로직을 끄거나 켜거나 제어하는 변수
   // flag 변수는 default 값을 false로 만들고 사용
@@ -96,10 +72,37 @@ const transactions = [
   }
 
   // 합계를 매번 다시 계산하는 변수
-  const totalbalance = accounts.reduce(
+  const totalBalance = accounts.reduce(
     (total, account) => total + account.balance,
     0
   );
+
+  // 이체 버튼을 누르면 이 함수 실행
+  function handleTransfer({ toAccount, amount, memo }) {
+    const from = accounts[0]
+    const nextBalance = from.balance - amount
+
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.accountId === from.accountId ? { ...a, balance: nextBalance } : a
+      )
+    )
+
+    setTransactions((prev) => [
+      {
+        txId: Date.now(),  // 현재 시간 UNIXTIME으로 timestamp
+        accountId: from.accountId,
+        txType: "출금",
+        amount,
+        balanceAfter: nextBalance,
+        category: "이체",
+        memo: memo || "이체",
+        counterparty: toAccount,
+        txDatetime: new Date().toISOString().slice(0, 19),
+      },
+      ...prev, // 새 거래를 맨 앞에
+    ])
+  }
 
   // for문 예시
   // const accountCards = [];
@@ -123,78 +126,82 @@ const transactions = [
     <>
     {/* jsx 문법을 읽는 곳 */}
     {/* 사용 */}
-    <Header ownerName={ accounts[0].ownerName}></Header>
-    <div className='toolbar'>
-      <button className='btn btn-ghost' onClick={() => setShowFullNo(!showFullNo)}>
-        {/* 논리연산자를 사용해서 같은 화면을 조건부 렌더링해보세요 */}
-        {/* showFullNo ? "계좌번호 숨기기" : "계좌번호 보기" */}
-        {showFullNo && "계좌번호 숨기기"}
-        {!showFullNo && "계좌번호 보기"}
-      </button>
-
-      <button className='btn btn-ghost' onClick={() => setShowAmount(!showAmount)}>
-        {showAmount ? "금액 숨기기" : "금액 보기"}
-      </button>
-    </div>
-    <div className='clock'>
-      <Clock />
-    </div>
-
-    {/* 총 자산 */}
-    <div className='total'>
-      <Panel>
-        <div className="row">
-          <span className="muted">총 자산</span>
-        </div>
-      <strong className="balance">
-        {formatWonMasked(totalbalance, !showAmount)}
-        </strong>
-      </Panel>
-    </div>
-
+    {/* App.jsx — 감싸기 */}
+    <UserProvider user={{ name: "김경모", grade: "우수" }}>
+      <Header />
     
-    <Panel title="내 계좌">
-      {accounts.map((account) => (
-        <AccountCard key={account.accountId} 
-                    showFullNo={showFullNo}
-                    showAmount={showAmount}
-                    onDeposit={() => handleDeposit(account.accountId)} 
-                    accountNo={account.accountNo}
-                    accountType={account.accountType} 
-                    balance={account.balance}
-                    status={account.status}  
-                     />
-        ))}
-      {/* <AccountCard accountNo={ accounts[0].accountNo } 
-        accountType={ accounts[0].accountType}
-        balance={ accounts[0].balance }
-        status={ accounts[0].status }
-        showFullNo={ showFullNo }
+      <div className='toolbar'>
+        <button className='btn btn-ghost' onClick={() => setShowFullNo(!showFullNo)}>
+          {/* 논리연산자를 사용해서 같은 화면을 조건부 렌더링해보세요 */}
+          {/* showFullNo ? "계좌번호 숨기기" : "계좌번호 보기" */}
+          {showFullNo && "계좌번호 숨기기"}
+          {!showFullNo && "계좌번호 보기"}
+        </button>
+
+        <button className='btn btn-ghost' onClick={() => setShowAmount(!showAmount)}>
+          {showAmount ? "금액 숨기기" : "금액 보기"}
+        </button>
+      </div>
+      <div className='clock'>
+        <Clock />
+      </div>
+
+      {/* 폼 컴포넌트 */}
+      <Panel title="이체">
+        <TransferForm fromAccount={accounts[0]} onTransfer={handleTransfer} />
+      </Panel>
+
+      {/* 총 자산 */}
+      <div className="total">
+        <p className='muted'> 총 자산 </p>
+        <strong className='balance'>
+          {formatWonMasked(totalBalance, !showAmount) }
+        </strong>
+      </div>
+      
+      <Panel title="내 계좌">
+        {accounts.map((account) => (
+          <AccountCard key={account.accountId} 
+                      showFullNo={showFullNo}
+                      showAmount={showAmount}
+                      onDeposit={() => handleDeposit(account.accountId)} 
+                      accountNo={account.accountNo}
+                      accountType={account.accountType} 
+                      balance={account.balance}
+                      status={account.status}  
+                      />
+          ))}
+        {/* <AccountCard accountNo={ accounts[0].accountNo } 
+          accountType={ accounts[0].accountType}
+          balance={ accounts[0].balance }
+          status={ accounts[0].status }
+          showFullNo={ showFullNo }
+          />
+        <AccountCard accountNo={ accounts[1].accountNo } 
+          accountType={ accounts[1].accountType}
+          balance={ accounts[1].balance }
+          status={ accounts[1].status }
+          showFullNo={ showFullNo }
+          /> */}
+      </Panel>
+
+      {/* map()과 key, spread연산자 사용  */}
+      <Panel title="최근 거래">
+        <TransactionList
+          transactions={transactions}
+          showAmount={showAmount}
         />
-      <AccountCard accountNo={ accounts[1].accountNo } 
-        accountType={ accounts[1].accountType}
-        balance={ accounts[1].balance }
-        status={ accounts[1].status }
-        showFullNo={ showFullNo }
-        /> */}
-    </Panel>
 
-    {/* map()과 key, spread연산자 사용  */}
-    <Panel title="최근 거래">
-      <TransactionList
-        transactions={transactions}
-        showAmount={showAmount}
-      />
+        {/* {transactions.map((tx) => (
+          <TransactionRow key={tx.txId} {...tx} />
+        ))} */}
 
-      {/* {transactions.map((tx) => (
-        <TransactionRow key={tx.txId} {...tx} />
-      ))} */}
+      </Panel>
 
-    </Panel>
-
-    <Panel title="오늘의 환율">
-      <ExchangeRate />
-    </Panel>
+      <Panel title="오늘의 환율">
+        <ExchangeRate />
+      </Panel>
+    </UserProvider>
     </>
   )
 }

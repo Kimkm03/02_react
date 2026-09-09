@@ -1,4 +1,5 @@
 // 계좌 상태에 따라 배지 색 변경
+import { useUser } from "../contexts/UserContext";
 
 const colors = {
     "정상" : "#00FF00",
@@ -8,7 +9,10 @@ const colors = {
 }
 
 // inline(코드 사이에 css 입힐 경우) : style={{ key : value }}
-function StatusBadge({ status }){
+function StatusBadge(){
+    const user = useUser();
+    const { status } = user;
+    
     return (
         <span className="badge" style={{ backgroundColor : colors[status] }}>
             {status}
