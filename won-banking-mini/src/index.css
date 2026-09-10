@@ -157,6 +157,30 @@ header h1 {
   margin-bottom: 12px;
 }
 
+/* 이체 폼 */
+.field { 
+  margin-bottom: 12px; 
+}
+
+.field label { 
+  display: block; 
+  font-size: 13px; 
+  color: var(--muted); 
+  margin-bottom: 4px; 
+}
+
+.field input { 
+  width: 100%;
+  padding: 8px 10px; 
+  border: 1px solid var(--line); 
+  border-radius: 8px; 
+}
+
+.error { 
+  color: #d93025; 
+  font-size: 13px; 
+}
+
 /* S4: 계좌 카드 안 버튼들이 들어가는 영역 */
 .card-actions {
   margin-top: 12px;

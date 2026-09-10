@@ -69,6 +69,22 @@ function App() {
       accounts.map((a) => 
         a.accountId === accountId ? {...a, balance: a.balance + 10000} : a)
     )
+
+    // setState 추가
+  setTransactions((prev) => [
+      {
+        txId: Date.now(),
+        accountId: accountId,
+        txType: "입금",
+        amount: 10000,
+        balanceAfter: nextBalance,
+        category: "입금",
+        memo: "입금",
+        counterparty: "입금 버튼",
+        txDatetime: new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }),
+      },
+      ...prev,
+    ])
   }
 
   // 합계를 매번 다시 계산하는 변수
@@ -98,7 +114,9 @@ function App() {
         category: "이체",
         memo: memo || "이체",
         counterparty: toAccount,
-        txDatetime: new Date().toISOString().slice(0, 19),
+        txDatetime: new Date().toLocaleString('sv-SE', {
+          timeZone: 'Asia/Seoul',
+        }).slice(0, 19),
       },
       ...prev, // 새 거래를 맨 앞에
     ])

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import TransactionRow from "./TransactionRow";
 import { formatWonMasked } from "../utils/format";
 // import { fetchTransactions } from "../api/exchange";
